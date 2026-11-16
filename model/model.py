@@ -1,3 +1,5 @@
+import copy
+
 from database.distributore_DAO import DistributoreDAO
 from database.prezzo_DAO import PrezzoDAO
 
@@ -29,17 +31,20 @@ class Model:
         :return: lista di tuple --> (nome del distributore, media), es. (Distributore A, 1.789)
         """
         result = []
-        prezzi = []
 
         for distributore in self._distributori:
             somma = 0
+            prezzi = []
             prezzi_distributore = PrezzoDAO.get_prezzi(distributore.id)    # Qui metto tutti i prezzi relativi a quel distributore
             for prezzo in prezzi_distributore:
                 if prezzo.data.month == mese:
                     prezzi.append(prezzo)
                     somma += prezzo.prezzo_litro
 
-            media_prezzi = somma / (len(prezzi))
+            if len(prezzi) != 0:
+                media_prezzi = somma / (len(prezzi))
+            else:
+                media_prezzi = 0
             result.append((distributore.nome, media_prezzi))
 
         return result
@@ -55,63 +60,39 @@ class Model:
         """
         self.__sequenza_ottima = []
         self.__costo_ottimo = -1
-        prezzi_settimana = self.__get_prezzi_prima_settimana_mese(mese)
+        prezzi_settimana = self.__get_prezzi_prima_settimana_mese(mese) # {id_distributore: [prezzo_giorno1, ..., prezzo_giorno7]}
 
         self.__ricorsione([], 1, None, 0, prezzi_settimana)
+        print(self.__sequenza_ottima)
 
         # Traduci gli ID in nomi
         id_to_nome = {distributore.id: distributore.nome for distributore in self._distributori}
         sequenza_nomi = [f"Giorno {giorno}: {id_to_nome[i]}" for giorno, i in enumerate(self.__sequenza_ottima, start=1)]
         return sequenza_nomi, round(self.__costo_ottimo, 2)
 
-
-
-
-
     def __ricorsione(self, sequenza_parziale, giorno, ultimo_distributore, costo_corrente, prezzi_settimana):
-        """ Implementa la ricorsione """
         if len(sequenza_parziale) == 7:
-            self.__sequenza_ottima = sequenza_parziale
-            self.__costo_ottimo = costo_corrente
+            # La salvo solo se è la prima trovata (-1 = "nessuna soluzione ancora")
+            # oppure se costa meno della migliore trovata finora
+            if self.__costo_ottimo == -1 or costo_corrente < self.__costo_ottimo:
+                self.__costo_ottimo = costo_corrente
+                self.__sequenza_ottima = copy.deepcopy(sequenza_parziale)   # Salvo una copia
             return
+
+        # Devo scegliere il distributore per il "giorno" corrente.
         else:
-            # Devo capire quale distributore ha il prezzo minimo per il giorno 1, per partire da lui
-            if costo_corrente == 0:
-                id_min = None
-                prezzo_min = None
-                for id, prezzi in prezzi_settimana.items():
-                    if prezzo_min is None:
-                        prezzo_min = prezzi[0]
-                        id_min = id
-                    elif prezzi[0] < prezzo_min:
-                        prezzo_min = prezzi[0]
-                        id_min = id
-                costo_corrente += prezzo_min * 100
-                ultimo_distributore = id_min
-                giorno += 1
-                sequenza_parziale.append(ultimo_distributore)
-            else:
-                costo_giorno = prezzi_settimana[ultimo_distributore][giorno - 1]  # TODO controllare
-                for distributore in self._distributori:
-                    costo = prezzi_settimana[distributore.id][giorno - 1]
-                    if costo * 100 + self.prezzo_fisso < costo_giorno * 100:   # Allora vale la pena spostarsi
-                        ultimo_distributore = distributore.id
-                        sequenza_parziale.append(ultimo_distributore)
-                        costo_corrente += costo * 100 + self.prezzo_fisso
-                        return
-                    else:
-                        sequenza_parziale.append(ultimo_distributore)
-                        costo_corrente += costo_giorno * 100
-                        return
+            for distributore in self._distributori:
+                id_d = distributore.id
+                costo = prezzi_settimana[id_d][giorno - 1] * 100
 
+                # Costo fisso di 5€ solo se cambio distributore rispetto a ieri
+                # Al giorno 1 ultimo_distributore è None: nessun costo di spostamento
+                if ultimo_distributore is not None and id_d != ultimo_distributore:
+                    costo += self.prezzo_fisso
 
-
-
-
-
-
-
-
+                sequenza_parziale.append(id_d)
+                self.__ricorsione(sequenza_parziale, giorno + 1, id_d, costo_corrente + costo, prezzi_settimana)
+                sequenza_parziale.pop()
 
 
 
