@@ -13,7 +13,7 @@ class AlertManager:
         if self._alert_dialog.open:
             self._page.update()
         else:
-            self._page.show_dialog(self._alert_dialog)
+            self._page.open(self._alert_dialog)
 
     def close(self, e):
-        self._page.pop_dialog()
+        self._page.close(self._alert_dialog)

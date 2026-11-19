@@ -12,7 +12,7 @@ class View:
         # Page
         self.page = page
         self.page.title = "Lab08"
-        self.page.horizontal_alignment = "center"
+        self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.theme_mode = ft.ThemeMode.DARK
 
         # Alert
@@ -35,41 +35,42 @@ class View:
         # SEZIONE 1: Intestazione
         self.txt_titolo = ft.Text(value="Analisi Prezzi Carburante", size=38, weight=ft.FontWeight.BOLD)
 
-        # SEZIONE 2: Dropdown + Pulsanti ######################################################
+        # SEZIONE 2: Dropdown + Pulsanti
         self.dropdown_mese = ft.Dropdown(
-            options=[ft.dropdown.Option(key="1", text="gennaio"),
-                     ft.dropdown.Option(key="2", text="febbraio"),
-                     ft.dropdown.Option(key="3", text="marzo"),
-                     ft.dropdown.Option(key="4", text="aprile"),
-                     ft.dropdown.Option(key="5", text="maggio"),
-                     ft.dropdown.Option(key="6", text="giugno"),
-                     ft.dropdown.Option(key="7", text="luglio"),
-                     ft.dropdown.Option(key="8", text="agosto"),
-                     ft.dropdown.Option(key="9", text="settembre"),
-                     ft.dropdown.Option(key="10", text="ottobre"),
-                     ft.dropdown.Option(key="11", text="novembre"),
-                     ft.dropdown.Option(key="12", text="dicembre"), ],
+            options=[
+                ft.dropdown.Option(key="1", text="gennaio"),
+                ft.dropdown.Option(key="2", text="febbraio"),
+                ft.dropdown.Option(key="3", text="marzo"),
+                ft.dropdown.Option(key="4", text="aprile"),
+                ft.dropdown.Option(key="5", text="maggio"),
+                ft.dropdown.Option(key="6", text="giugno"),
+                ft.dropdown.Option(key="7", text="luglio"),
+                ft.dropdown.Option(key="8", text="agosto"),
+                ft.dropdown.Option(key="9", text="settembre"),
+                ft.dropdown.Option(key="10", text="ottobre"),
+                ft.dropdown.Option(key="11", text="novembre"),
+                ft.dropdown.Option(key="12", text="dicembre"),
+            ],
             label="Mese",
             width=200,
             hint_text="Selezionare un mese",
-            on_select=self.controller.leggi_mese
+            on_change=self.controller.leggi_mese
         )
 
-        pulsante_prezzo = ft.Button(
-            "Prezzo medio",
+        pulsante_prezzo = ft.ElevatedButton(
+            text="Prezzo medio",
             tooltip="Verifica il prezzo medio per distributore, nel mese selezionato",
             on_click=self.controller.get_prezzo_medio
         )
 
-        pulsante_calcolo_sequenza = ft.Button(
-            "Calcola Sequenza",
+        pulsante_calcolo_sequenza = ft.ElevatedButton(
+            text="Calcola Sequenza",
             tooltip="Calcola la sequenza ottimale per i rifornimenti",
             on_click=self.controller.calcola_sequenza
         )
 
-        # SEZIONE 3: Visualizzazione mediante ListView ########################################
+        # SEZIONE 3: Visualizzazione mediante ListView
         self.lista_visualizzazione = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
-
 
         # --- Toggle Tema ---
         self.toggle_cambia_tema = ft.Switch(label="Tema scuro", value=True, on_change=self.cambia_tema)
@@ -93,12 +94,12 @@ class View:
             ft.Container(
                 content=self.lista_visualizzazione,
                 height=400,
-                border=ft.Border.all(1, ft.Colors.BLACK),
+                border=ft.border.all(1, ft.Colors.BLACK),
                 padding=5,
             ),
         )
 
-        self.page.scroll = "adaptive"
+        self.page.scroll = ft.ScrollMode.ADAPTIVE
         self.page.update()
 
     def cambia_tema(self, e):

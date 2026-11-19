@@ -30,6 +30,8 @@ class Model:
         :param mese: Mese selezionato (un intero da 1 a 12)
         :return: lista di tuple --> (nome del distributore, media), es. (Distributore A, 1.789)
         """
+
+        '''
         result = []
 
         for distributore in self._distributori:
@@ -46,8 +48,20 @@ class Model:
             else:
                 media_prezzi = 0
             result.append((distributore.nome, media_prezzi))
+        '''
 
-        return result
+
+        risultato = []
+
+        for distributore in self._distributori:
+            prezzi_mese = []
+            for prezzo in distributore.get_prezzi():
+                if prezzo.data.month == mese:
+                    prezzi_mese.append(prezzo.prezzo_litro)
+
+            media = sum(prezzi_mese) / len(prezzi_mese)
+            risultato.append((distributore.nome, media))
+        return risultato
 
 
 
@@ -96,6 +110,31 @@ class Model:
 
 
 
+
+
+
+        # A - Condizione terminale: sequenza completa (7 giorni)
+        if giorno == 8:
+            if self.__costo_ottimo == -1 or costo_corrente < self.__costo_ottimo:   # Vuol dire che ho trovato qualcosa che è migliore di quello che avevo salvato
+                self.__costo_ottimo = costo_corrente
+                self.__sequenza_ottima = list(sequenza_parziale) # Come fare il .copy() ma con la lista
+            return
+
+        # Parte di ricorsione
+        for id_distributore, prezzi in prezzi_settimana.items():
+            costo = prezzi[giorno - 1] * 100
+            if ultimo_distributore is not None and ultimo_distributore != id_distributore:
+                costo += self.prezzo_fisso
+            nuovo_costo = costo_corrente + costo
+
+            if self.__costo_ottimo == -1 or nuovo_costo < self.__costo_ottimo:
+                sequenza_parziale.append(id_distributore)
+                self.__ricorsione(sequenza_parziale, giorno + 1, id_distributore, nuovo_costo, prezzi_settimana)
+                sequenza_parziale.pop()
+
+
+
+
     def __get_prezzi_prima_settimana_mese(self, mese: int):
         """
         Restituisce i prezzi dei primi 7 giorni del mese selezionato per ciascun distributore.
@@ -104,7 +143,8 @@ class Model:
         result = {}
 
         for distributore in self._distributori:
-            prezzi = PrezzoDAO.get_prezzi(distributore.id)
+            '''prezzi = PrezzoDAO.get_prezzi(distributore.id)'''
+            prezzi = distributore.get_prezzi()
             prezzi_settimana = []
             for prezzo in prezzi:
                 if prezzo.data.month == mese and 1 <= prezzo.data.day <= 7:
